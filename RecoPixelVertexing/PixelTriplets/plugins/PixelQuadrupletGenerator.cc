@@ -272,27 +272,21 @@ void PixelQuadrupletGenerator::hitQuadruplets( const TrackingRegion& region, Ord
     
     HitPairGeneratorFromLayerPairCA caDoubletsGenerator(0,1,10000);
     
-    std::vector<FKDTree<float,3>* > layersHitsTree;
-    std::vector<std::vector<FKDTree<float,3>*> > layersHitsTreePairs;
-    std::vector<HitDoubletsCA*> layersDoublets;
+    //std::vector<FKDTree<float,3>> layersHitsTree;
+    LayerTree albero1; albero1.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[0],region,ev,es);
+    LayerTree albero2; albero2.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[1],region,ev,es);
+    LayerTree albero3; albero3.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[2],region,ev,es);
+    LayerTree albero4; albero4.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[3],region,ev,es);
+    
+    auto const & doublets1 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[0],fourLayers[1],albero1);
+    auto const & doublets2 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[1],fourLayers[2],albero2);
+    auto const & doublets3 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[2],fourLayers[3],albero3);
+    
+    //std::vector<HitDoubletsCA> layersDoublets;
     
     //std::vector<CACell::CAntuplet> foundQuadruplets;
     std::vector<unsigned int> indexOfFirstCellOfLayer;
     std::vector<unsigned int> numberOfCellsPerLayer;
-    
-    for (auto layer : fourLayers)
-    {
-        LayerTree alberoBuffer;
-        alberoBuffer.FKDTree<float,3>::make_FKDTreeFromRegionLayer(layer,region,ev,es);
-        layersHitsTree.push_back(&(alberoBuffer));
-    }
-    
-    for (int j=0;j<(int)layersHitsTree.size()-1;j++)
-    {
-
-        auto CADoubletsBuffer = caDoubletsGenerator.doublets(region,ev,es,fourLayers[j],fourLayers[j+1],*layersHitsTree[j]);
-        layersDoublets.push_back(&CADoubletsBuffer);
-    }
     
     /* CON LE CACHEs : NON TESTATO
     for (auto layer : fourLayers)
