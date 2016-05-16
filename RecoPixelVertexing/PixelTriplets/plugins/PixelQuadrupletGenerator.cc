@@ -263,9 +263,9 @@ void PixelQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region, Orde
 }
 
 
-void PixelQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region, OrderedHitSeeds& result,
+void PixelQuadrupletGenerator::hitQuadruplets( const TrackingRegion& region, OrderedHitSeeds& result,
                                               const edm::Event& ev, const edm::EventSetup& es,
-                                              const SeedingLayerSetsHits::SeedingLayerSet fourLayers)
+                                              const SeedingLayerSetsHits::SeedingLayerSet& fourLayers)
 {
     std::cout<<"PixelQuadruplets CA : in!"<<std::endl;
     if (theComparitor) theComparitor->init(ev, es);
@@ -274,28 +274,37 @@ void PixelQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region, Orde
     
     std::vector<FKDTree<float,3>* > layersHitsTree;
     std::vector<std::vector<FKDTree<float,3>*> > layersHitsTreePairs;
-    std::vector<const HitDoubletsCA*> layersDoublets;
+    std::vector<HitDoubletsCA*> layersDoublets;
     
-    std::vector<std::vector<CACell>* > foundCellsPerLayer;
     //std::vector<CACell::CAntuplet> foundQuadruplets;
     std::vector<unsigned int> indexOfFirstCellOfLayer;
     std::vector<unsigned int> numberOfCellsPerLayer;
     
     for (auto layer : fourLayers)
     {
-        layersHitsTree.push_back(&(*theKDTreeCache)(layer,region,ev,es));
+        LayerTree alberoBuffer;
+        alberoBuffer.FKDTree<float,3>::make_FKDTreeFromRegionLayer(layer,region,ev,es);
+        layersHitsTree.push_back(&(alberoBuffer));
     }
     
-    for (int j=0;j<(int)layersHitsTree.size();j++)
+    for (int j=0;j<(int)layersHitsTree.size()-1;j++)
     {
-        layersHitsTree[j]->FKDTree<float,3>::build();
+
+        auto CADoubletsBuffer = caDoubletsGenerator.doublets(region,ev,es,fourLayers[j],fourLayers[j+1],*layersHitsTree[j]);
+        layersDoublets.push_back(&CADoubletsBuffer);
+    }
+    
+    /* CON LE CACHEs : NON TESTATO
+    for (auto layer : fourLayers)
+    {
+        layersHitsTree.push_back(&(*theKDTreeCache)(layer,region,ev,es));
     }
     
     for (int j=0;j<(int)layersHitsTree.size()-1;j++)
     {
         layersDoublets.push_back(&(*theDoubletsCache)(fourLayers[j],fourLayers[j+1],(*layersHitsTree[j]),region,ev,es)); //Passa vector
     }
-    
+    */
     
     //QUI SOTTO CI VA IL CELLULAR AUTOMATON
 /*
