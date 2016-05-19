@@ -53,14 +53,14 @@ private:
 private:
   typedef DoubletsCache Cache;
 public:
-  LayerDoubletsCache(unsigned int initSize=100) : theCache(initSize){ }
+  LayerDoubletsCache(unsigned int initSize=1000) : theCache(initSize){ }
   
   void clear() { theCache.clear(); }
     
   //void init(LayerFKDTreeCache* tree) { theTreeCache = std::move(tree); }
   
     const HitDoubletsCA &
-    operator()(const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer,LayerTree & innerTree, const TrackingRegion & region, const edm::Event & iE, const edm::EventSetup & iS) {
+    operator()(const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer,LayerTree * innerTree, const TrackingRegion & region, const edm::Event & iE, const edm::EventSetup & iS) {
     //const unsigned short int nLayers = layers.size();
     //assert (nLayers == 2, "Error : two layers needed!" );
         
