@@ -14,6 +14,9 @@
 #include "DataFormats/GeometryVector/interface/Pi.h"
 #include "DataFormats/TrackerRecHit2D/interface/BaseTrackerRecHit.h"
 #include "TrackingTools/DetLayers/interface/DetLayer.h"
+#include "TrackingTools/TransientTrackingRecHit/interface/SeedingLayerSetsHits.h"
+#include "RecoTracker/TkTrackingRegions/interface/TrackingRegion.h"
+#include "FWCore/Framework/interface/EventSetup.h"
 
 typedef BaseTrackerRecHit const * Hit;
 
@@ -89,7 +92,56 @@ public:
         thePoints.clear();
         theIndecesToVisit.clear();
     }
+    
     /*
+    template<class float, int 3>
+    FKDTree(const std::vector<Hit>& hits, GlobalPoint const & origin);
+    
+    /*
+    FKDTree<float,3>(const SeedingLayerSetsHits::SeedingLayer& layer, const TrackingRegion & region, const edm::Event & iEvent, const edm::EventSetup & iSetup)
+    {
+        
+        std::cout<<"Make Tree From Region Layer : in!"<<std::endl;
+        //static_assert( (typeof(TYPE) == float), "Float." );
+        const float maxDelphi = region.ptMin() < 0.3f ? float(M_PI)/4.f : float(M_PI)/8.f;
+        const float safePhi = M_PI-maxDelphi;
+        
+        std::vector<Hit> hits = region.hits(iEvent,iSetup,layer);
+        
+        unsigned int pointID = 0;
+        for (int i = 0; i!=(int)hits.size(); i++) {
+            Hit const & hit = hits[i]->hit();
+            auto const & gs = hit->globalState();
+            auto phi = gs.position.barePhi();
+            auto z = gs.position.z();
+            auto r = gs.r;
+            
+            std::cout<<"Make Point? - Phi = "<<phi<<" Z = "<<z<<" R = "<<r<<std::endl;
+            thePoints.push_back(make_FKDPoint(phi,z,r,pointID)); pointID++;
+            std::cout<<"Made!"<<std::endl;
+            std::cout<<"Point : "<<points[i][0]<<" - "<<points[i][0]<<" - "<<points[i][1]<<" - "<<points[i][2]<<std::endl;
+            if (phi>safePhi) {thePoints.push_back(make_FKDPoint(phi-Geom::ftwoPi(),z,r,pointID)); pointID++;}
+            else if (phi<-safePhi) {thePoints.push_back(make_FKDPoint(phi+Geom::ftwoPi(),z,r,pointID));pointID++;}
+            
+        the
+        std::cout<<"Point array: done!"<<std::endl;
+        
+        theNumberOfPoints = thePoints.size();
+        theDepth = FLOOR_LOG2(theNumberOfPoints);
+        for (auto& x : theDimensions)
+            x.resize(theNumberOfPoints);
+        theIntervalLength.resize(theNumberOfPoints, 0);
+        theIntervalMin.resize(theNumberOfPoints, 0);
+        theIds.resize(theNumberOfPoints, 0);
+
+        build();
+        
+        std::cout<<"Tree from point array: done & built!"<<std::endl;
+        
+    }*/
+    
+    
+    
     FKDTree(const FKDTree<TYPE, numberOfDimensions>& other)
     {
         theNumberOfPoints(other.theNumberOfPoints);
@@ -132,7 +184,7 @@ public:
         for (int i = 0; i < numberOfDimensions; ++i)
             theDimensions = std::move(other.theDimensions);
     }
-    */
+    
     FKDTree<TYPE, numberOfDimensions>& operator=(
                                                  FKDTree<TYPE, numberOfDimensions> && other)
     {
@@ -504,6 +556,7 @@ public:
         }
         
     }
+
     
     void make_FKDTreeFromRegionLayer(const SeedingLayerSetsHits::SeedingLayer& layer, const TrackingRegion & region, const edm::Event & iEvent, const edm::EventSetup & iSetup)
     {

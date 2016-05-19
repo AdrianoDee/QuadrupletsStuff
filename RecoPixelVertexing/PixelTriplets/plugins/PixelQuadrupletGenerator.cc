@@ -267,20 +267,85 @@ void PixelQuadrupletGenerator::hitQuadruplets( const TrackingRegion& region, Ord
                                               const edm::Event& ev, const edm::EventSetup& es,
                                               const SeedingLayerSetsHits::SeedingLayerSet& fourLayers)
 {
-    std::cout<<"PixelQuadruplets CA : in!"<<std::endl;
+    std::cout<<std::endl<<"PixelQuadruplets CA : in!"<<std::endl;
     if (theComparitor) theComparitor->init(ev, es);
     
     HitPairGeneratorFromLayerPairCA caDoubletsGenerator(0,1,10000);
     
-    //std::vector<FKDTree<float,3>> layersHitsTree;
-    LayerTree albero1; albero1.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[0],region,ev,es);
-    LayerTree albero2; albero2.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[1],region,ev,es);
-    LayerTree albero3; albero3.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[2],region,ev,es);
-    LayerTree albero4; albero4.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[3],region,ev,es);
+    //std::vector<FKDTree<float,3>*> layersHitsTree;
     
-    auto const & doublets1 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[0],fourLayers[1],albero1);
-    auto const & doublets2 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[1],fourLayers[2],albero2);
-    auto const & doublets3 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[2],fourLayers[3],albero3);
+    /*
+    bool treesFlags[3];
+    for (int j=0; j<3; j++) {
+        std::cout<<"Checking cache for id : "<<fourLayers[j].index()<<std::endl;
+        if(theKDTreeCache->checkCache(fourLayers[j].index())){
+            std::cout<<"Tree already done "<<std::endl;
+            theKDTreeCache->getCache(fourLayers[j].index(),&trees[j]);
+            std::cout<<"Tree copied "<<std::endl;
+            //layersHitsTree.push_back(&trees[j]);
+        } else {
+            std::cout<<"Tree to be created "<<fourLayers[j].index()<<std::endl;
+            trees[j].LayerTree::make_FKDTreeFromRegionLayer(fourLayers[j],region,ev,es);
+            std::cout<<"Tree created "<<std::endl;
+            theKDTreeCache->writeCache(fourLayers[j].index(),&trees[j]);
+            std::cout<<"Tree cached "<<std::endl;
+            //layersHitsTree.push_back(&trees[j]);
+        }
+    }*/
+    
+    LayerTree & innerTree = theKDTreeCache->getTree(fourLayers[0],region,ev,es);
+    LayerTree & middleTree = theKDTreeCache->getTree(fourLayers[1],region,ev,es);
+    LayerTree & outerTree = theKDTreeCache->getTree(fourLayers[2],region,ev,es);
+    
+    
+    std::vector<unsigned int> idS = innerTree.getIdVector();
+    
+    if(innerTree.empty()) std::cout<<"Tree Empty"<<std::endl;
+        else{
+            for (int j=0; j<(int)idS.size(); j++) {
+                std::cout<<" "<<idS[j]<<" ";
+            }
+        }
+    /*
+    LayerTree treeFourth; treeFourth.FKDTree<float,3>::make_FKDTreeFromRegionLayer(fourLayers[3],region,ev,es);
+    layersHitsTree.push_back(&treeFourth);*/
+    
+    
+    /*
+    auto const & albero1 = (theKDTreeCache)(fourLayers[0],region,ev,es); layersHitsTree.push_back(&albero1);
+    auto const & albero2 = (theKDTreeCache)(fourLayers[1],region,ev,es); layersHitsTree.push_back(&albero2);
+    auto const & albero3 = (theKDTreeCache)(fourLayers[2],region,ev,es); layersHitsTree.push_back(&albero3);
+    auto const & albero4 = (theKDTreeCache)(fourLayers[3],region,ev,es); layersHitsTree.push_back(&albero4);
+    */
+    
+    if (&innerTree == nullptr) std::cout<<"CAZZOOOOOOO!"<<std::endl;
+    
+    auto const & doublets1 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[0],fourLayers[1],&innerTree);
+    std::cout<<"INNER LAYER :  " <<fourLayers[0].name()<<"    "<<"OUTER LAYER :  " <<fourLayers[1].name()<<std::endl;
+    std::cout<<"CA Doublets : done!"<<std::endl;
+    std::cout<<doublets1.size()<<" CA doublets found!"<<std::endl;
+    for(int j=0;j <(int)doublets1.size();j++){
+        std::cout<<" [ "<<doublets1.innerHitId(j) <<" - "<<doublets1.outerHitId(j)<<" ]  ";
+    }
+    
+    
+    
+    
+    auto const & doublets2 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[1],fourLayers[2],&middleTree);
+    std::cout<<"INNER LAYER :  " <<fourLayers[1].name()<<"    "<<"OUTER LAYER :  " <<fourLayers[2].name()<<std::endl;
+    std::cout<<"CA Doublets : done!"<<std::endl;
+    std::cout<<doublets2.size()<<" CA doublets found!"<<std::endl;
+    for(int j=0;j <(int)doublets2.size();j++){
+        std::cout<<" [ "<<doublets2.innerHitId(j) <<" - "<<doublets2.outerHitId(j)<<" ]  ";
+    }
+    
+    auto const & doublets3 = caDoubletsGenerator.doublets(region,ev,es,fourLayers[2],fourLayers[3],&outerTree);
+    std::cout<<"INNER LAYER :  " <<fourLayers[2].name()<<"    "<<"OUTER LAYER :  " <<fourLayers[3].name()<<std::endl;
+    std::cout<<"CA Doublets : done!"<<std::endl;
+    std::cout<<doublets3.size()<<" CA doublets found!"<<std::endl;
+    for(int j=0;j <(int)doublets3.size();j++){
+        std::cout<<" [ "<<doublets3.innerHitId(j) <<" - "<<doublets3.outerHitId(j)<<" ]  ";
+    }
     
     //std::vector<HitDoubletsCA> layersDoublets;
     

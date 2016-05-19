@@ -11,7 +11,7 @@
 class DetLayer;
 class TrackingRegion;
 
-using LayerTree = FKDTree<float,3>;
+using LayerTree =  FKDTree<float,3>;
 using LayerPoint = FKDPoint<float,3>;
 
 class HitPairGeneratorFromLayerPairCA {
@@ -33,7 +33,7 @@ public:
   ~HitPairGeneratorFromLayerPairCA();
 
   HitDoubletsCA doublets (const TrackingRegion& reg, const edm::Event & ev,  const edm::EventSetup& es,
-                          const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer,LayerTree & outerTree);
+                          const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer, LayerTree* outerTree);
 
   //void hitPairs( const TrackingRegion& reg, OrderedHitPairs & prs,const edm::Event & ev,  const edm::EventSetup& es, Layers layers);
   /*
