@@ -29,6 +29,8 @@ public:
     bool empty() const { return indeces.empty();}
     void clear() { indeces.clear();}
     void shrink_to_fit() { indeces.shrink_to_fit();}
+    void init(Layer const & innerLayer,
+              Layer const & outerLayer) {layers[0] = &innerLayer; layers[1] = &outerLayer;}
     
     void add (int il, int ol) { indeces.push_back(il);indeces.push_back(ol);}
     
@@ -38,6 +40,7 @@ public:
     int outerHitId(int i) const {return indeces[2*i+1];}
     
     Hit const & hit(int i, layer l) const {return layers[l]->hits()[i];}
+
     
     float       phi(int i, layer l) const { return layers[l]->hits()[i]->globalState().position.phi();}
     float       r(int i, layer l) const { return layers[l]->hits()[i]->globalState().r;}
@@ -46,6 +49,7 @@ public:
     float        x(int i, layer l) const { return layers[l]->hits()[i]->globalState().position.x();}
     float        y(int i, layer l) const { return layers[l]->hits()[i]->globalState().position.y();}
     GlobalPoint gp(int i, layer l) const { return GlobalPoint(x(i,l),y(i,l),z(i,l));}
+    
     
 private:
     
