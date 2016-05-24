@@ -58,13 +58,38 @@ public:
   void clear() { theCache.clear(); }
     
   //void init(LayerFKDTreeCache* tree) { theTreeCache = std::move(tree); }
-  
-    const HitDoubletsCA &
+    const HitDoubletsCA & getDoublets(const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer,LayerTree * innerTree, const TrackingRegion & region, const edm::Event & iE, const edm::EventSetup & iS) {
+        
+        int key = (innerLayer.detLayer()->seqNum())*NUMLAYERS + outerLayer.detLayer()->seqNum();
+        assert (key>=0);
+        const HitDoubletsCA* buffer = theCache.get(key);
+        const HitDoubletsCA* pointer = new HitDoubletsCA(innerLayer,outerLayer);
+        HitDoubletsCA result (innerLayer,outerLayer);
+        if (buffer==nullptr) {
+            
+            HitPairGeneratorFromLayerPairCA thePairGenerator(innerLayer.detLayer()->seqNum(),outerLayer.detLayer()->seqNum(),100);
+            
+            HitDoubletsCA result=thePairGenerator.doublets(region,iE,iS,innerLayer,outerLayer,innerTree);
+            
+            pointer = &result;
+            buffer = pointer;
+            /*LogDebug("LayerHitMapCache")<<" I got"<< lhm->all().second-lhm->all().first<<" hits in the cache for: "<<layer.detLayer();*/
+             theCache.add( key, buffer);
+             }
+             else{
+             // std::cout << region.origin() << " " <<  lhm->theOrigin << std::endl;
+             LogDebug("LayerDoubletsCache")<<" Doublets for layers"<< outerLayer.detLayer()->seqNum() <<" & "<<innerLayer.detLayer()->seqNum()<<" already in the cache with key: "<<key;
+             }
+             return *buffer;
+             }
+    
+    
+    /*const HitDoubletsCA &
     operator()(const SeedingLayerSetsHits::SeedingLayer& innerLayer,const SeedingLayerSetsHits::SeedingLayer& outerLayer,LayerTree * innerTree, const TrackingRegion & region, const edm::Event & iE, const edm::EventSetup & iS) {
     //const unsigned short int nLayers = layers.size();
     //assert (nLayers == 2, "Error : two layers needed!" );
         
-    int key = (innerLayer.detLayer()->seqNum()-1)*NUMLAYERS + outerLayer.detLayer()->seqNum();
+    
     assert (key>=0);
     const HitDoubletsCA* buffer = theCache.get(key);
     HitDoubletsCA result (innerLayer,outerLayer);
@@ -75,7 +100,7 @@ public:
         HitDoubletsCA result=thePairGenerator.doublets(region,iE,iS,innerLayer,outerLayer,innerTree);
 
         buffer = &result;
-    /*LogDebug("LayerHitMapCache")<<" I got"<< lhm->all().second-lhm->all().first<<" hits in the cache for: "<<layer.detLayer();*/
+    /*LogDebug("LayerHitMapCache")<<" I got"<< lhm->all().second-lhm->all().first<<" hits in the cache for: "<<layer.detLayer();
         theCache.add( key, buffer);
     }
     else{
@@ -83,7 +108,7 @@ public:
       LogDebug("LayerDoubletsCache")<<" Doublets for layers"<< outerLayer.detLayer()->seqNum() <<" & "<<innerLayer.detLayer()->seqNum()<<" already in the cache with key: "<<key;
     }
     return *buffer;
-  }
+  }*/
 
     //void init(HitPairGeneratorFromLayerPairCA const & pairGenerator, ) {thePairGenerator = std::move(pairGenerator);}
     
