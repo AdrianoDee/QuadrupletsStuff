@@ -72,8 +72,8 @@ void CAHitTripletGenerator::hitTriplets(const TrackingRegion& region,
 				<< layers.numberOfLayersInSet();
 
 	CAGraph g;
-    
-    std::cout<<"CA Triplet generetaor - IN "<<st::endl;
+
+    std::cout<<"CA Triplet generetaor - IN "<<std::endl;
 
 	std::vector<HitDoublets> hitDoublets;
 
@@ -247,4 +247,3 @@ void CAHitTripletGenerator::hitTriplets(const TrackingRegion& region,
 
 	}
 }
-
