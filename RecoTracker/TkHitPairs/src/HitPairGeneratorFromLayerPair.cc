@@ -63,6 +63,21 @@ namespace {
                 float vErr = nSigmaRZ * innerHitsMap.dv[i];
                 Range hitRZ(innerHitsMap.v[i]-vErr, innerHitsMap.v[i]+vErr);
                 Range crossRange = allowed.intersection(hitRZ);
+                switch (checkRZ->algo()) {
+                    case (HitRZCompatibility::zAlgo) :
+                        //std::cout<<"Range for search Z: "<<std::endl;
+                        //std::cout<<crossRange.max()<<" - "<<crossRange.min()<<std::endl;
+                        break;
+                    case (HitRZCompatibility::rAlgo) :
+                        //std::cout<<"Range for search R: "<<std::endl;
+                        //std::cout<<crossRange.max()<<" - "<<crossRange.min()<<std::endl;
+                        break;
+                    case (HitRZCompatibility::etaAlgo) :
+                        //std::cout<<"Range for search ETA: "<<std::endl;
+                        //std::cout<<crossRange.max()<<" - "<<crossRange.min()<<std::endl;
+                        break;
+                }
+
                 ok[i-b] = ! crossRange.empty() ;
             }
         }
@@ -192,6 +207,11 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
     for (int io = 0; io!=int(outerHitsMap.theHits.size()); ++io) {
         if (!deltaPhi.prefilter(outerHitsMap.x[io],outerHitsMap.y[io])) continue;
         Hit const & ohit =  outerHitsMap.theHits[io].hit();
+        auto const & gs = static_cast<BaseTrackerRecHit const &>(*ohit).globalState();
+        float oX = gs.position.x();
+        float oY = gs.position.y();
+        float oZ = gs.position.z();
+        //std::cout<<"Inner layer : "<<innerHitDetLayer.seqNum()<<" Outer layer : "<<outerHitDetLayer.seqNum()<<" - Outer Hit io "<<(io)<<": "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
         PixelRecoRange<float> phiRange = deltaPhi(outerHitsMap.x[io],
                                                   outerHitsMap.y[io],
                                                   outerHitsMap.z[io],
@@ -238,6 +258,7 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
                     delete checkRZ;
                     return;
                 }
+                std::cout<<" [ "<<b+i<<" - "<<io<<" ] "<<std::endl;
                 result.add(b+i,io);
             }
         }
@@ -277,9 +298,9 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
     float lowerLimit = 10000;
 
     constexpr float nSigmaPhi = 3.f;
-    for (int io = 0; io!=int(outerLayer.hits().size()); ++io) {
-        // std::cout<<"  Outer hit cylce : in!("<<io<<")"<<std::endl;
-        Hit const & ohit = outerLayer.hits()[io];
+    for (int io = 0; io!=int(outerHitsMap.theHits.size()); ++io) {
+        if (!deltaPhi.prefilter(outerHitsMap.x[io],outerHitsMap.y[io])) continue;
+        Hit const & ohit =  outerHitsMap.theHits[io].hit();
         auto const & gs = static_cast<BaseTrackerRecHit const &>(*ohit).globalState();
         auto loc = gs.position-region.origin().basicVector();
 
@@ -287,7 +308,8 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
         float oY = gs.position.y();
         float oZ = gs.position.z();
         float oRv = loc.perp();
-        std::cout<<"Hit : "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
+        //std::cout<<"CA - "<<std::endl;
+        //std::cout<<"Inner layer : "<<(*innerLayer.detLayer()).seqNum()<<" Outer layer : "<<(*outerLayer.detLayer()).seqNum()<<" - Outer Hit io "<<(io)<<": "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
         float oDrphi = gs.errorRPhi;
         float oDr = gs.errorR;
         float oDz = gs.errorZ;
@@ -324,10 +346,10 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
 
         }
 
-        // std::cout<<"Final range : "<<lowerLimit<<" - "<<upperLimit<<std::endl;
-        // std::cout<<"Phi : "<<loc.barePhi()<<std::endl;
-        // std::cout<<"Zeta : "<<oZ<<std::endl;
-        // std::cout<<"R : "<<oRv<<std::endl;
+         //std::cout<<"Final range : "<<lowerLimit<<" - "<<upperLimit<<std::endl;
+         //std::cout<<"Phi : "<<loc.barePhi()<<std::endl;
+         //std::cout<<"Zeta : "<<oZ<<std::endl;
+         //std::cout<<"R : "<<oRv<<std::endl;
         //rangesDone = true;
 
 
@@ -354,7 +376,7 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
                 //std::cout<<"HitRZ Check : etaAlgo CAZZO!"<<"("<<io<<")"<<std::endl;
                 break;
         }
-        std::cout<<"Found hits : "<<foundHitsInRange.size()<<" ("<<io<<")"<<std::endl;
+        // std::cout<<"Found hits : "<<foundHitsInRange.size()<<" ("<<io<<")"<<std::endl;
         for (auto i=0; i!=(int)foundHitsInRange.size(); ++i) {
 
             if (theMaxElement!=0 && result.size() >= theMaxElement){
@@ -363,6 +385,7 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
                 delete checkRZ;
                 return result;
             }
+            std::cout<<" [ "<<foundHitsInRange[i]<<" - "<<io<<" ] "<<std::endl;
             result.add(foundHitsInRange[i],io);
         }
         delete checkRZ;

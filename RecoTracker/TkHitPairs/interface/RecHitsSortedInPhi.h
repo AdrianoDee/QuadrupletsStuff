@@ -37,7 +37,7 @@ public:
   typedef std::pair<HitIter,HitIter>            Range;
 
   using DoubleRange = std::array<int,4>;
-  
+
   RecHitsSortedInPhi(const std::vector<Hit>& hits, GlobalPoint const & origin, DetLayer const * il);
 
   bool empty() const { return theHits.empty(); }
@@ -45,7 +45,7 @@ public:
 
 
   // Returns the hits in the phi range (phi in radians).
-  //  The phi interval ( phiMin, phiMax) defined as the signed path along the 
+  //  The phi interval ( phiMin, phiMax) defined as the signed path along the
   //  trigonometric circle from the point at phiMin to the point at phiMax
   //  must be positive and smaller than pi.
   //  At least one of phiMin, phiMax must be in (-pi,pi) range.
@@ -134,7 +134,7 @@ public:
   HitDoublets(  RecHitsSortedInPhi const & in,
 		RecHitsSortedInPhi const & out) :
     layers{{&in,&out}}{}
-  
+
   HitDoublets(HitDoublets && rh) : layers(std::move(rh.layers)), indeces(std::move(rh.indeces)){}
 
   void reserve(std::size_t s) { indeces.reserve(2*s);}
