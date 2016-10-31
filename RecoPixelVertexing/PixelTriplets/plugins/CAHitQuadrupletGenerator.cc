@@ -120,14 +120,8 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 				if (std::find(g.theLayerPairs.begin(), g.theLayerPairs.end(),
 						tmpInnerLayerPair) == g.theLayerPairs.end())
 				{
-          std::cout<<"Hit Doublets indeces for layers "<<std::endl;
-          std::cout<<"Inner : "<<i<<" - "<<j-1<<std::endl;
-          std::cout<<"Outer : "<<i<<" - "<<j<<std::endl;
 					hitDoublets.emplace_back(thePairGenerator.doublets(region, ev, es,
 							layers[i][j-1], layers[i][j]));
-          std::cout<<"Hit Doublets CA indeces for layers "<<std::endl;
-          std::cout<<"Inner : "<<i<<" - "<<j-1<<std::endl;
-          std::cout<<"Outer : "<<i<<" - "<<j<<std::endl;
           hitDoubletsCA.emplace_back(thePairGenerator.doubletsCA(region, ev, es,
     							layers[i][j-1], layers[i][j]));
 
@@ -144,14 +138,18 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 
 			}
 
-
+      // std::cout<<"Hit Doublets indeces for layers "<<hitDoublets.back().size()<<std::endl;
+      // std::cout<<"Inner : "<<i<<" - "<<j-1<<std::endl;
+      // std::cout<<"Outer : "<<i<<" - "<<j<<std::endl;
       //
-      // for (size_t k = 0; k < hitDoublets.size(); ++k) {
+      // for (size_t k = 0; k < hitDoublets.back().size(); ++k) {
       //   std::cout<<"Doublet "<<k<<" : ["<<hitDoublets.back().innerHitId(k)<<" ; "<<hitDoublets.back().outerHitId(k)<<" ]  ---  [("<<hitDoublets.back().x(k,HitDoublets::inner)<<" , "<<hitDoublets.back().y(k,HitDoublets::inner)<<" , "<<hitDoublets.back().z(k,HitDoublets::inner)<<")  ;  "<<hitDoublets.back().x(k,HitDoublets::outer)<<" , "<<hitDoublets.back().y(k,HitDoublets::outer)<<" , "<<hitDoublets.back().z(k,HitDoublets::outer)<<")"<<std::endl;
       // }
+      // std::cout<<"Hit Doublets CA indeces for layers - "<<hitDoubletsCA.back().size()<<std::endl;
+      // std::cout<<"Inner : "<<i<<" - "<<j-1<<std::endl;
+      // std::cout<<"Outer : "<<i<<" - "<<j<<std::endl;
       //
-      //
-      // for (size_t k = 0; k < hitDoubletsCA.size(); ++k) {
+      // for (size_t k = 0; k < hitDoubletsCA.back().size(); ++k) {
       //   std::cout<<"Doublet "<<k<<" : ["<<hitDoubletsCA.back().innerHitId(k)<<" ; "<<hitDoubletsCA.back().outerHitId(k)<<" ]  ---  [("<<hitDoubletsCA.back().x(k,HitDoublets::inner)<<" , "<<hitDoubletsCA.back().y(k,HitDoublets::inner)<<" , "<<hitDoubletsCA.back().z(k,HitDoublets::inner)<<")  ;  "<<hitDoubletsCA.back().x(k,HitDoublets::outer)<<" , "<<hitDoubletsCA.back().y(k,HitDoublets::outer)<<" , "<<hitDoubletsCA.back().z(k,HitDoublets::outer)<<")"<<std::endl;
       // }
 

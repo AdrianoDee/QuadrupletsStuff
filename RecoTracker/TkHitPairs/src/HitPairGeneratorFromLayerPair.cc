@@ -258,7 +258,7 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
                     delete checkRZ;
                     return;
                 }
-                std::cout<<" [ "<<b+i<<" - "<<io<<" ] "<<std::endl;
+                // std::cout<<" [ "<<b+i<<" - "<<io<<" ] "<<std::endl;
                 result.add(b+i,io);
             }
         }
@@ -385,7 +385,7 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
                 delete checkRZ;
                 return result;
             }
-            std::cout<<" [ "<<foundHitsInRange[i]<<" - "<<io<<" ] "<<std::endl;
+            // std::cout<<" [ "<<foundHitsInRange[i]<<" - "<<io<<" ] "<<std::endl;
             result.add(foundHitsInRange[i],io);
         }
         delete checkRZ;
