@@ -120,9 +120,9 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 				if (std::find(g.theLayerPairs.begin(), g.theLayerPairs.end(),
 						tmpInnerLayerPair) == g.theLayerPairs.end())
 				{
-					hitDoublets.emplace_back(thePairGenerator.doublets(region, ev, es,
-							layers[i][j-1], layers[i][j]));
-          hitDoubletsCA.emplace_back(thePairGenerator.doubletsCA(region, ev, es,
+					// hitDoublets.emplace_back(thePairGenerator.doublets(region, ev, es,
+					// 		layers[i][j-1], layers[i][j]));
+          hitDoublets.emplace_back(thePairGenerator.doubletsCA(region, ev, es,
     							layers[i][j-1], layers[i][j]));
 
 					g.theLayerPairs.push_back(tmpInnerLayerPair);
