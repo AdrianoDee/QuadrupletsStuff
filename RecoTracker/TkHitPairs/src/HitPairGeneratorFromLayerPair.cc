@@ -285,7 +285,7 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
     LayerTree *innerTree = new FKDTree<float,3>();
     innerTree->FKDTree<float,3>::make_FKDTreeFromRecHitsInPhi(innerHitsMap,region);
 
-    //std::cout<<"Hit Doublets CA Generator : in!  -  ";
+    std::cout<<"Hit Doublets CA Generator : in!  -  ";
     HitDoublets result(innerHitsMap,outerHitsMap);
     result.reserve(std::max(innerHitsMap.size(),outerHitsMap.size()));
     //HitDoubletsCA result(innerLayer,outerLayer);
