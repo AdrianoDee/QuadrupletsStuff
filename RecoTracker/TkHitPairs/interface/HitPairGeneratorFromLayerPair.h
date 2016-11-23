@@ -29,7 +29,7 @@ public:
                         const edm::Event & ev,  const edm::EventSetup& es, const Layer& innerLayer, const Layer& outerLayer);
   HitDoublets doubletsCA( const TrackingRegion& reg,
                          const edm::Event & ev,  const edm::EventSetup& es, const Layer& innerLayer, const Layer& outerLayer);
-  
+
   void hitPairs( const TrackingRegion& reg, OrderedHitPairs & prs,
                  const edm::Event & ev,  const edm::EventSetup& es, Layers layers);
   static void doublets(
@@ -51,8 +51,8 @@ public:
                          const unsigned int theMaxElement,
                          HitDoublets & result);
 
-  
-  
+
+
   Layer innerLayer(const Layers& layers) const { return layers[theInnerLayer]; }
   Layer outerLayer(const Layers& layers) const { return layers[theOuterLayer]; }
 

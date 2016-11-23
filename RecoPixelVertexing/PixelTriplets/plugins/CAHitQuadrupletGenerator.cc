@@ -11,13 +11,18 @@
 
 #include "TrackingTools/DetLayers/interface/BarrelDetLayer.h"
 
+#include <sys/time.h> // for timeval
+#include <sys/times.h> // for tms
 
+#include <fstream>
 
 #include "CellularAutomaton.h"
 
 #include "CommonTools/Utils/interface/DynArray.h"
 
 #include "FWCore/Utilities/interface/isFinite.h"
+
+
 
 namespace
 {
@@ -77,8 +82,16 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 
 
 	std::vector<HitDoublets> hitDoublets;
-  std::vector<HitDoublets> hitDoubletsCA;
+  // std::vector<HitDoublets> hitDoubletsCA;
 
+  // std::ofstream textout ("../Timing/timings.txt", std::ofstream::app);
+  // double totTime = 0.0;
+  // double totTimeCA = 0.0;
+  // double clocks = 0.;
+  // 
+  // timeval startTime, stopTime, totalTime;
+  // clock_t startC, stopC;
+  // tms startProc, stopProc;
 
 	HitPairGeneratorFromLayerPair thePairGenerator(0, 1, &theLayerCache);
 	for (unsigned int i = 0; i < layers.size(); i++)
@@ -120,10 +133,31 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 				if (std::find(g.theLayerPairs.begin(), g.theLayerPairs.end(),
 						tmpInnerLayerPair) == g.theLayerPairs.end())
 				{
-					// hitDoublets.emplace_back(thePairGenerator.doublets(region, ev, es,
-					// 		layers[i][j-1], layers[i][j]));
-          hitDoublets.emplace_back(thePairGenerator.doubletsCA(region, ev, es,
-    							layers[i][j-1], layers[i][j]));
+          // gettimeofday(&startTime, NULL);
+          // startC = times(&startProc);
+
+					hitDoublets.emplace_back(thePairGenerator.doublets(region, ev, es,
+					 		layers[i][j-1], layers[i][j]));
+
+          // stopC = times(&stopProc);
+          // gettimeofday(&stopTime, NULL);
+          //
+          // clocks = (double) (stopC - startC)*10000.;
+          //
+          // totTime += (clocks /(double)CLOCKS_PER_SEC);
+          //
+          // gettimeofday(&startTime, NULL);
+          // startC = times(&startProc);
+          //
+          // hitDoubletsCA.emplace_back(thePairGenerator.doubletsCA(region, ev, es,
+    			// 				layers[i][j-1], layers[i][j]));
+          //
+          // stopC = times(&stopProc);
+          // gettimeofday(&stopTime, NULL);
+          //
+          // clocks = (stopC - startC)*10000.;
+          //
+          // totTimeCA += (clocks / CLOCKS_PER_SEC);
 
 					g.theLayerPairs.push_back(tmpInnerLayerPair);
 					g.theLayers[vertexIndex].theInnerLayers.push_back(
@@ -156,6 +190,27 @@ void CAHitQuadrupletGenerator::hitQuadruplets(const TrackingRegion& region,
 		}
 
 	}
+
+  // if(hitDoublets.size()>0 && hitDoubletsCA.size()>0){
+  //
+  //   int noDoubletsCA = 0;
+  //   int noDoublets = 0;
+  //
+  //   for(int i = 0; i<(int)hitDoublets.size();++i)
+  //   {
+  //     noDoublets += hitDoublets[i].size();
+  //   }
+  //
+  //   for(int i = 0; i<(int)hitDoubletsCA.size();++i)
+  //   {
+  //     noDoubletsCA += hitDoubletsCA[i].size();
+  //   }
+  //
+  //   textout<<"------------------------------------------------"<<std::endl;
+  //   textout<<"Hit doublets    total time : "<<totTime<<" - no. of Doublets Vectors : "<<hitDoublets.size()<<" no of Doublets : "<<noDoublets<<" avg time : "<< totTime / ((double)hitDoublets.size())<<std::endl;
+  //   textout<<"Hit doublets CA total time : "<<totTimeCA<<" - no. of Doublet Vectors : "<<hitDoubletsCA.size()<<" no of Doublets : "<<noDoubletsCA<<" avg time : "<< totTimeCA / ((double) hitDoubletsCA.size())<<std::endl;
+  //   textout<<"------------------------------------------------"<<std::endl;
+  // }
 
 
 

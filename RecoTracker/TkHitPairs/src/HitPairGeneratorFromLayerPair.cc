@@ -12,7 +12,15 @@
 #include "RecoTracker/TkHitPairs/src/InnerDeltaPhi.h"
 #include "RecoPixelVertexing/PixelTriplets/plugins/FKDTree.h"
 
+#include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
+#include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
+
 #include "FWCore/Framework/interface/Event.h"
+
+#include <sys/time.h> // for timeval
+#include <sys/times.h> // for tms
+
+#include <fstream>
 
 using namespace GeomDetEnumerators;
 using namespace std;
@@ -196,6 +204,8 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
                                              const unsigned int theMaxElement,
                                              HitDoublets & result){
 
+
+
     //  HitDoublets result(innerHitsMap,outerHitsMap); result.reserve(std::max(innerHitsMap.size(),outerHitsMap.size()));
     typedef RecHitsSortedInPhi::Hit Hit;
     InnerDeltaPhi deltaPhi(outerHitDetLayer, innerHitDetLayer, region, iSetup);
@@ -204,13 +214,31 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
 
     // constexpr float nSigmaRZ = std::sqrt(12.f);
     constexpr float nSigmaPhi = 3.f;
+
     for (int io = 0; io!=int(outerHitsMap.theHits.size()); ++io) {
         if (!deltaPhi.prefilter(outerHitsMap.x[io],outerHitsMap.y[io])) continue;
         Hit const & ohit =  outerHitsMap.theHits[io].hit();
+
+        // ohit->firstClusterRef().pixelCluster();
         auto const & gs = static_cast<BaseTrackerRecHit const &>(*ohit).globalState();
+        // const SiPixelRecHit * recHitPix = dynamic_cast<const SiPixelRecHit *>(ohit);
+        // SiPixelRecHit::ClusterRef const& cluster = recHitPix->cluster();
+
+
         float oX = gs.position.x();
         float oY = gs.position.y();
         float oZ = gs.position.z();
+
+        // std::cout<<"Outer layer : "<<outerHitDetLayer.seqNum()<<" - Outer Hit io "<<(io)<<": "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
+        // std::cout<<"Silicon Pixel Cluster ----- "<<std::endl;
+        // std::cout<<"Size : "<<cluster->size()<<" [ X : "<<cluster->sizeX()<<" Y : "<<cluster->sizeY()<<" ]"<<std::endl;
+        // std::cout<<"Row from : "<<cluster->minPixelRow()<<" to : "<<cluster->maxPixelRow()<<std::endl;
+        // std::cout<<"Col from : "<<cluster->minPixelCol()<<" to : "<<cluster->maxPixelCol()<<std::endl;
+
+        // for (int i = 0; i < cluster->size(); ++i) {
+        //   std::cout<<"\t Pixel "<<i<<" - - - "<<" x = "<<cluster->pixel(i).x<<" y = "<<cluster->pixel(i).y<<" adc = "<<cluster->pixel(i).adc<<std::endl;
+        // }
+
         //std::cout<<"Inner layer : "<<innerHitDetLayer.seqNum()<<" Outer layer : "<<outerHitDetLayer.seqNum()<<" - Outer Hit io "<<(io)<<": "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
         PixelRecoRange<float> phiRange = deltaPhi(outerHitsMap.x[io],
                                                   outerHitsMap.y[io],
@@ -236,6 +264,7 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
         for(int j=0; j<3; j+=2) {
             auto b = innerRange[j]; auto e=innerRange[j+1];
             bool ok[e-b];
+
             switch (checkRZ->algo()) {
                 case (HitRZCompatibility::zAlgo) :
                     std::get<0>(kernels).set(checkRZ);
@@ -250,6 +279,7 @@ void HitPairGeneratorFromLayerPair::doublets(const TrackingRegion& region,
                     std::get<2>(kernels)(b,e,innerHitsMap, ok);
                     break;
             }
+
             for (int i=0; i!=e-b; ++i) {
                 if (!ok[i]) continue;
                 if (theMaxElement!=0 && result.size() >= theMaxElement){
@@ -276,16 +306,48 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
     typedef OrderedHitPair::OuterRecHit OuterHit;
     typedef RecHitsSortedInPhi::Hit Hit;
 
+    // std::ofstream textout ("../Timing/timings.txt", std::ofstream::app);
+
+    // timeval startTime, stopTime, totalTime;
+    // clock_t startC, stopC;
+    // tms startProc, stopProc;
+    //
+    // unsigned int searchCounter = 0;
+    // double timeSearch = 0.0;
+    // double treeTime = 0.0;
+    // double treeTimePhi = 0.0;
+
     const RecHitsSortedInPhi & innerHitsMap = theLayerCache(innerLayer, region, iEvent, iSetup);
     if (innerHitsMap.empty()) return HitDoublets(innerHitsMap,innerHitsMap);
 
     const RecHitsSortedInPhi& outerHitsMap = theLayerCache(outerLayer, region, iEvent, iSetup);
     if (outerHitsMap.empty()) return HitDoublets(innerHitsMap,outerHitsMap);
+    //
+    // gettimeofday(&startTime, NULL);
+    // startC = times(&startProc);
 
     LayerTree *innerTree = new FKDTree<float,3>();
     innerTree->FKDTree<float,3>::make_FKDTreeFromRecHitsInPhi(innerHitsMap,region);
+    //
+    // stopC = times(&stopProc);
+    // gettimeofday(&stopTime, NULL);
+    //
+    // treeTimePhi = (((stopC - startC)*10000.) / CLOCKS_PER_SEC);
+    //
+    // gettimeofday(&startTime, NULL);
+    // startC = times(&startProc);
+    //
+    // LayerTree *innerTreeTiming = new FKDTree<float,3>();
+    // innerTreeTiming->FKDTree<float,3>::make_FKDTreeFromRegionLayer(innerLayer,region,iEvent,iSetup);
+    //
+    // stopC = times(&stopProc);
+    // gettimeofday(&stopTime, NULL);
+    //
+    // treeTime = (((stopC - startC)*10000.) / CLOCKS_PER_SEC);
 
-    std::cout<<"Hit Doublets CA Generator : in!  -  ";
+
+
+    // std::cout<<"Hit Doublets CA Generator : in!  -  "<<std::endl;
     HitDoublets result(innerHitsMap,outerHitsMap);
     result.reserve(std::max(innerHitsMap.size(),outerHitsMap.size()));
     //HitDoubletsCA result(innerLayer,outerLayer);
@@ -362,6 +424,9 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
 
         std::vector<unsigned int> foundHitsInRange;
 
+        // ++searchCounter;
+        // gettimeofday(&startTime, NULL);
+        // startC = times(&startProc);
 
         switch (checkRZ->algo()) {
             case (HitRZCompatibility::zAlgo) :
@@ -376,6 +441,11 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
                 //std::cout<<"HitRZ Check : etaAlgo CAZZO!"<<"("<<io<<")"<<std::endl;
                 break;
         }
+        // stopC = times(&stopProc);
+        // gettimeofday(&stopTime, NULL);
+        //
+        // timeSearch += (((stopC - startC)*10000.) / CLOCKS_PER_SEC);
+
         // std::cout<<"Found hits : "<<foundHitsInRange.size()<<" ("<<io<<")"<<std::endl;
         for (auto i=0; i!=(int)foundHitsInRange.size(); ++i) {
 
@@ -391,6 +461,14 @@ HitDoublets HitPairGeneratorFromLayerPair::doubletsCA( const TrackingRegion& reg
         delete checkRZ;
 
     }
+    //
+    // textout<<"------------------------------------------------"<<std::endl;
+    // textout<<"Tree search       : "<<timeSearch<<" - no. of Searches : "<<searchCounter<<std::endl;
+    // textout<<"Tree creation     : "<<treeTime<<std::endl;
+    // textout<<"Tree creation Phi : "<<treeTimePhi<<std::endl;
+    // textout<<"------------------------------------------------"<<std::endl;
+
+
     LogDebug("HitPairGeneratorFromLayerPairCA")<<" total number of pairs provided back: "<<result.size();
     result.shrink_to_fit();
     return result;
