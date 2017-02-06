@@ -107,6 +107,8 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
   ls = GetStdoutFromCommand(files);
   std::vector<std::string> pdgIdsNames = split(ls,'\n');
   std::map< std::pair<int,int> , std::map <int,std::pair <int,float > > > pdgMap;
+  //pdgMap[(evt,det)] = idMap
+  //idMap[evt,det,hitId] = (pdg,check)
 
   for (size_t i = 0; i < pdgIdsNames.size(); i++) {
 
@@ -154,7 +156,7 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
    //VectorPerEvents[Map[detector,hitIdInPhi]] =  pdgId
 
    std::map< int, std::map <std::pair<int,int>,std::pair<int,float>> > theMap;
-
+   // theMap[event] = < (det, ) ; () >
    if(noFiles>keyNames.size()) noFiles=(long int)keyNames.size();
 
    for (size_t i = 0; i < noFiles; ++i)
@@ -194,13 +196,21 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
      {
        std::map< std::pair<int,int> , std::map <int,std::pair <int,float > > >::iterator it1;
        it1 = pdgMap.find(evtDet);
+       // Search for a member of pdgIdMap with the same pair event-detector
 
        if (it1 != pdgMap.end())
        {
+         //if found I have a pdgMap for this event and detector
+         //that is like:
+         //pdgMap[hitId] = (pdgId,check)
+
          std::cout<<it1->first.first<<" - "<<it1->first.second<<std::endl;
          keyTxt.clear(); keyTxt.seekg (0, ios::beg);
          std::map <int,std::pair<int,float> > phiMap;
          std::map < std::pair<int,int>, std::pair<int,float> > aMap;
+
+         //Here create a map with
+         //phiMap[hitId] = (phiHitId,check)
 
           while( (keyTxt >> hitId >> phiHitId >> check ) )
           {
@@ -215,8 +225,19 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
 
           }
 
+          // So I have two maps
+
+          // pdgMap[hitId] = (pdfId,check)  ------>  an "it1 value"
+          // phiMap[hitId] = (phiHitId,check)
+
+          //from which I create
           for (std::map<int,std::pair<int,float> >::iterator it2=phiMap.begin(); it2!=phiMap.end(); ++it2)
           {
+            //Iterate on the pairs of phiMap
+            //search for an element of the pdgMap with the same hitId
+            //so it3 points to a pair <phiId,check> corresponding
+            //to the pair <pdgId,check> with the same hitId
+
             std::map <int,std::pair <int,float > >::iterator it3;
             it3 = it1->second.find(it2->first);
 
@@ -228,17 +249,21 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
               // std::cout<<"Pdg map element : "<<std::endl;
               // std::cout<<it3->first << " " << (it3->second).first << " " << (it3->second).second<<std::endl;
 
+              //Compare checks (cheks are x position of the hit)
               if((it3->second).second == (it2->second).second)
               {
                 // std::cout<<detId << " " << event << " " << it2->first << " " << (it3->second).first<<std::endl;
 
-                std::pair<int,int> keyDetHit(detId,it2->first);
+                std::pair<int,int> keyDetHit(detId,(it2->second).first);
                 std::pair<int,float> idCheck((it3->second).first,(it3->second).second);
+
+                //Fill aMap, that is a map <(detId,phiHitId),(pdgId,check)>
                 aMap[keyDetHit]  = idCheck;
             }
           }
           }
-
+          //Fill theMap that is a map o aMaps for each event
+          //Event ---> aMap [(detId,phiId)] = (pdgId,check)
           theMap[event] = aMap;
        }
 
