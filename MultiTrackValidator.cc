@@ -22,9 +22,20 @@
 #include "SimTracker/TrackAssociation/plugins/ParametersDefinerForTPESProducer.h"
 #include "SimTracker/TrackAssociation/plugins/CosmicParametersDefinerForTPESProducer.h"
 
+#include "DataFormats/SiPixelDetId/interface/PXBDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PXFDetId.h"
+#include "DataFormats/SiPixelDetId/interface/PixelSubdetector.h"
+#include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHitCollection.h"
+#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetUnit.h"
+#include "Geometry/TrackerGeometryBuilder/interface/PixelGeomDetType.h"
+#include "Geometry/CommonTopologies/interface/PixelTopology.h"
+#include "Geometry/TrackerGeometryBuilder/interface/RectangularPixelTopology.h"
+#include "DataFormats/SiPixelDigi/interface/PixelDigi.h"
+
 #include "DataFormats/TrackReco/interface/DeDxData.h"
 #include "DataFormats/Common/interface/ValueMap.h"
 #include "DataFormats/Common/interface/Ref.h"
+#include "DataFormats/SiPixelDetId/interface/PixelEndcapNameUpgrade.h"
 #include "CommonTools/Utils/interface/associationMapFilterValues.h"
 #include<type_traits>
 #include <unordered_set>
@@ -32,6 +43,7 @@
 #include "Geometry/CommonDetUnit/interface/GeomDetType.h"
 #include "DataFormats/TrackerRecHit2D/interface/SiPixelRecHit.h"
 #include "DataFormats/SiPixelCluster/interface/SiPixelCluster.h"
+#include "DataFormats/GeometryVector/interface/LocalPoint.h"
 
 
 #include "TMath.h"
@@ -40,7 +52,8 @@
 #include <TH2D.h>
 #include "DataFormats/Math/interface/deltaR.h"
 #include "DataFormats/Math/interface/PtEtaPhiMass.h"
-//#include <iostream>
+#include <iostream>
+#include <fstream>
 
 using namespace std;
 using namespace edm;
@@ -790,18 +803,27 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
 
       TFile* clusterFile = new TFile("./Clusters/clusters.root","UPDATE");
 
-      Int_t padHalfSize = 16.5;
+      std::ofstream barrel0("barel0.txt", std::ofstream::app);
+      std::ofstream barrel1("barel1.txt", std::ofstream::app);
+      std::ofstream barrel2("barel2.txt", std::ofstream::app);
+      std::ofstream barrel3("barel3.txt", std::ofstream::app);
+
+      std::ofstream forward0("forward0.txt", std::ofstream::app);
+      std::ofstream forward1("forward1.txt", std::ofstream::app);
+      std::ofstream forward2("forward2.txt", std::ofstream::app);
+
+      Float_t padHalfSize = 4.0;
       Int_t goodTrack = 0;
       Int_t nHitsTrack = 0;
       Int_t nHitsPixel = 0;
       Int_t trackId,pdgId,charge;
-      Int_t detId;
 
       Double_t px,py,pz,pt;
 
 
       for(View<Track>::size_type i=0; i<trackCollection.size(); ++i){
 
+        Int_t nHitsPixelTracker = 0;
         nHitsPixel = 0;
         nHitsTrack = 0;
         goodTrack = 0;
@@ -829,19 +851,31 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
         auto tpFound = recSimColl.find(track);
         isSimMatched = tpFound != recSimColl.end();
 
-        for (size_t j = 0; j < track->recHitsSize(); ++j) {
+        for ( trackingRecHit_iterator recHit = track->recHitsBegin();       recHit != track->recHitsEnd(); ++recHit ) {
 
-          auto && recHit = track->recHit(j);
-          auto && detector = recHit->det();
+          if ( !((*recHit)->isValid()) ) continue;
+          if( (*recHit)->geographicalId().det() != DetId::Tracker ) continue;
 
-          if((detector->type()).isTrackerPixel()){
 
-            const SiPixelRecHit * recHitPix = dynamic_cast<const SiPixelRecHit*>(&(*recHit));
-            if(!recHitPix) continue;
-            else ++nHitsPixel;
+          const DetId & hit_detId = (*recHit)->geographicalId();
 
-          }
+
+          uint IntSubDetID = (hit_detId.subdetId());
+
+          //std::cout<<"Det id : "<<IntSubDetID<<"phi span : "<<detector->surface().phiSpan().first<<" - "<<detector->surface().phiSpan().second<<std::endl;
+
+          if(IntSubDetID == 0 ) continue;
+          if(IntSubDetID != PixelSubdetector::PixelBarrel && IntSubDetID != PixelSubdetector::PixelEndcap) continue;
+
+          const SiPixelRecHit* hit = dynamic_cast<const SiPixelRecHit*>((*recHit));
+          ++nHitsPixelTracker;
+          if(!hit) continue;
+          else ++nHitsPixel;
+
         }
+
+        // if(nHitsPixelTracker!=nHitsPixel)
+        // std::cout<<"nHitsPixelTracker : "<<nHitsPixelTracker<<" nHitsPixel :"<<nHitsPixel<<std::endl;
 
         if (isSimMatched) {
             goodTrack = 1;
@@ -868,39 +902,155 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
                                      << " NOT associated to any TrackingParticle" << "\n";
 	}
 
-  if(nHitsPixel==4 ||nHitsPixel==3 ||nHitsPixel==5){
+  if(nHitsPixel>3){
+    int hitcounter = 0;
+    for ( trackingRecHit_iterator recHit = track->recHitsBegin();recHit != track->recHitsEnd(); ++recHit ) {
 
-    for (size_t j = 0; j < track->recHitsSize(); ++j) {
+      if ( !((*recHit)->isValid()) ) continue;
+      if( (*recHit)->geographicalId().det() != DetId::Tracker ) continue;
 
-      auto && recHit = track->recHit(j);
-      auto && detector = recHit->det();
+      const DetId & hit_detId = (*recHit)->geographicalId();
 
-      if((detector->type()).isTrackerPixel()){
+      uint IntSubDetID = (hit_detId.subdetId());
 
-        const SiPixelRecHit * recHitPix = dynamic_cast<const SiPixelRecHit*>(&(*recHit));
-        if(!recHitPix) continue;
+      if(IntSubDetID == 0 ) continue;
+      if(IntSubDetID != PixelSubdetector::PixelBarrel && IntSubDetID != PixelSubdetector::PixelEndcap) continue;
 
-        SiPixelRecHit::ClusterRef const& cluster = recHitPix->cluster();
+      const SiPixelRecHit* hit = dynamic_cast<const SiPixelRecHit*>((*recHit));
 
-        detId = recHit->geographicalId();
+      SiPixelRecHit::ClusterRef const& cluster = hit->cluster();
+
+      if(cluster->sizeX()>padHalfSize*2 || cluster->sizeY()>padHalfSize*2) continue;
+
+      //auto && detector = (*recHit)->det();
+
+      // const PixelGeomDetUnit * PixelGeom = dynamic_cast<const PixelGeomDetUnit*> (detector);
+      //
+      // const PixelTopology * topol = &(PixelGeom->specificTopology());
+      // Local2DPoint clusterPoint1(cluster->pixel(0).x,cluster->pixel(0).y);
+      // Local2DPoint clusterPoint2(cluster->pixel(1).x,cluster->pixel(1).y);
+
+      float oX = ((*recHit)->globalPosition()).x();
+      float oY = ((*recHit)->globalPosition()).y();
+      float oZ = ((*recHit)->globalPosition()).z();
+
+      float locX = ((*recHit)->localPosition().x());
+      float locY = ((*recHit)->localPosition().y());
+
+      Local2DPoint hitLocal(locX,locY);
+
+//       ESHandle<TrackerGeometry> theTrackerGeometry;
+//       setup.get<TrackerDigiGeometryRecord>().get(theTrackerGeometry);
+//
+//       const PixelGeomDetUnit* thePixelDet = dynamic_cast<const PixelGeomDetUnit*>((theTrackerGeometry->idToDet(hit_detId)));
+//       const RectangularPixelTopology *topology = dynamic_cast<const RectangularPixelTopology*>( &(thePixelDet->specificTopology()));
+//
+// //        LocalPoint local = topology->localPosition(strip);
+
+//
+//
+//
+      //  std::cout<<"============== "<<hitcounter<<" ========= "<<std::endl;
+      //  std::cout<<"Hit : "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
+      //  std::cout<<"Loca X : "<<locX<<" Y : "<<locY<<std::endl;
+      //  std::cout<<"Hit local to global :"<<detector->toGlobal(hitLocal).x()<<" - "<<detector->toGlobal(hitLocal).y()<<" - "<<detector->toGlobal(hitLocal).z()<<std::endl;
+      //  std::cout<<"Cluster "<<cluster->x()<<" - "<<cluster->y()<<std::endl;
+       //std::cout<<"Pixel1 "<<cluster->pixel(1).x<<" - "<<cluster->pixel(1).y<<" : "<<detector->toGlobal(clusterPoint2).x()<<" - "<<detector->toGlobal(clusterPoint2).y()<<" - "<<detector->toGlobal(clusterPoint2).z()<<std::endl;
+
+      std::string detString;
+      std::string clusterPlot = std::to_string(event.id().run()); //Run
+      clusterPlot +="_";
+      clusterPlot += std::to_string(event.id().luminosityBlock()); //Lumi
+      clusterPlot +="_";
+      clusterPlot += std::to_string(event.id().event()); //Event
+      clusterPlot +="_";
+
+      clusterPlot += std::to_string(trackId); //Track
+      clusterPlot +="_";
+      clusterPlot += std::to_string(hitcounter);//Hit
+      clusterPlot +="_";
+
+      ++hitcounter;
+
+      PXBDetId pbdetId(0); PXFDetId pfdetId(0);
+      int layer,side,disk;
+      //int blade,panel,module,ladder,zindex;
+
+      if(IntSubDetID == PixelSubdetector::PixelBarrel)
+         {
+           pbdetId = PXBDetId(hit_detId);
+           layer = pbdetId.layer();
+          //  ladder = pbdetId.ladder();
+          //  zindex = pbdetId.module();
+           //cout<<"barrel layer/ladder/module: "<<layer<<std::endl;//"/"<<ladder<<"/"<<zindex<<endl;
+
+           clusterPlot += "B_0_"; detString ="B_0_";
+           clusterPlot += std::to_string(layer); detString += std::to_string(layer);
+           clusterPlot +="_";
+
+          //  if(layer==0) barrel0<<locX<<" "<<locY<<std::endl;
+          //  if(layer==1) barrel1<<locX<<" "<<locY<<std::endl;
+          //  if(layer==2) barrel2<<locX<<" "<<locY<<std::endl;
+          //  if(layer==3) barrel3<<locX<<" "<<locY<<std::endl;
+              //std::cout<<"B3 : "<<oX<<" - "<<oY<<" - "<<oZ<<std::endl;
+          //  clusterPlot += std::to_string(ladder);
+          //  clusterPlot +="_";
+          //  clusterPlot += std::to_string(zindex);
+          //  clusterPlot +="_0_";
+
+
+         }
+
+      if(IntSubDetID == PixelSubdetector::PixelEndcap)
+         {
+
+           pfdetId = PXFDetId(hit_detId);
+           side = pfdetId.side();
+           disk = pfdetId.disk();
+           //  blade = pfdetId.blade();
+           //  panel = pfdetId.panel();
+           //  module = pfdetId.module();
+           //cout<<"forward side/disk:"<<side<<"/"<<disk<<std::endl;//"/"<<blade<<"/"<<panel<<"/"<<module<<endl;
+
+           clusterPlot += "F";
+           clusterPlot += std::to_string(side);
+           clusterPlot +="_";
+           if(disk<7) clusterPlot +="0";
+           else if(disk>11) clusterPlot +="2";
+           else clusterPlot +="1";
+           clusterPlot +="_";
+
+           detString = "F";
+           detString += std::to_string(side);
+           detString +="_";
+           if(disk<7) detString +="0";
+           else if(disk>11) detString +="2";
+           else detString +="1";
+
+          //  if(disk<7) forward0<<locX<<" "<<locY<<std::endl;
+          //  if(disk>11) forward1<<locX<<" "<<locY<<std::endl;
+          //  if(disk>=7 && disk<=11) forward2<<locX<<" "<<locY<<std::endl;
+
+          //  clusterPlot += std::to_string(blade);
+          //  clusterPlot +="_";
+          //  clusterPlot += std::to_string(panel);
+          //  clusterPlot +="_";
+          //  clusterPlot += std::to_string(module);
+          //  clusterPlot +="_";
+
+         }
+
 
         //std::cout<<"Det id :"<<detId<<" Det name : "<<detector->type().name()<<std::endl;
 
-        std::string clusterPlot = std::to_string(event.id().run()); //Run
-        clusterPlot +="_";
-        clusterPlot += std::to_string(event.id().luminosityBlock()); //Lumi
-        clusterPlot +="_";
-        clusterPlot += std::to_string(event.id().event()); //Event
-        clusterPlot +="_";
-
-        clusterPlot += std::to_string(trackId); //Track
-        clusterPlot +="_";
-        clusterPlot += std::to_string(j);//Hit
-        clusterPlot +="_";
-        clusterPlot += std::to_string(detId);//Det
-        clusterPlot +="_";
-
         clusterPlot += std::to_string(goodTrack); //True
+        clusterPlot +="_";
+
+        clusterPlot += std::to_string(oX);//x
+        clusterPlot +="_";
+        clusterPlot += std::to_string(oY);//y
+        clusterPlot +="_";
+        clusterPlot += std::to_string(oZ);//z
         clusterPlot +="_";
 
         clusterPlot += std::to_string(px);//px
@@ -926,7 +1076,9 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
         Double_t minClusterY = floor(cluster->y())-padHalfSize;
         Double_t maxClusterY = floor(cluster->y())+padHalfSize;
 
-        TH2D hitClusters(clusterPlot.data(),clusterPlot.data(),padHalfSize*2,minClusterX,maxClusterX,padHalfSize*2,minClusterY,maxClusterY);
+        // std::cout<<clusterPlot<<std::endl;
+
+        TH2D hitClusters(clusterPlot.data(),clusterPlot.data(),(Int_t)(padHalfSize*2),minClusterX,maxClusterX,(Int_t)(padHalfSize*2),minClusterY,maxClusterY);
 
         for (int nx = 0; nx < hitClusters.GetNbinsX(); ++nx) {
           for (int ny = 0; ny < hitClusters.GetNbinsY(); ++ny) {
@@ -935,14 +1087,87 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
 
         }
 
+        // double diffX = 0.0, avgX = 0.0;
+        // double diffY = 0.0, avgY = 0.0;
+
         for (int k = 0; k < cluster->size(); ++k) {
-         //  std::cout<<"\t Pixel "<<k<<" - - - "<<" x = "<<cluster->pixel(k).x<<" y = "<<cluster->pixel(k).y<<" adc = "<<cluster->pixel(k).adc<<std::endl;
+          // std::cout<<"\t Pixel "<<k<<" - - - "<<" x = "<<cluster->pixel(k).x<<" y = "<<cluster->pixel(k).y<<" adc = "<<cluster->pixel(k).adc<<std::endl;
+          // LocalPoint local = topol->localPosition(MeasurementPoint(cluster->pixel(k).x,cluster->pixel(k).y));
+          //
+          // GlobalPoint globalPixelClust = PixelGeom->surface().toGlobal(local);
+          // if(k<cluster->size()-1)
+          // {
+          //   std::cout<<"Pixel  "<<k<<" "<<cluster->pixel(k).x<<" - "<<cluster->pixel(k).y<<" : "<<globalPixelClust.x()<<" - "<<globalPixelClust.y()<<" - "<<globalPixelClust.z()<<std::endl;
+          //
+          //   LocalPoint localNex = topol->localPosition(MeasurementPoint(cluster->pixel(k+1).x,cluster->pixel(k+1).y));
+          //   GlobalPoint globalPixelClustNex = PixelGeom->surface().toGlobal(localNex);
+          //   diffX = abs(globalPixelClustNex.x()-globalPixelClust.x()); avgX+=diffX;
+          //   diffY = abs(globalPixelClustNex.y()-globalPixelClust.y()); avgY+=diffY;
+          //
+          // }
+          // std::cout<<" Avg Diff X = "<<(double)(avgY/((double)cluster->size()))<<" Avg Diff X = "<<(double)(avgX/((double)cluster->size()))<<std::endl;
           hitClusters.SetBinContent(hitClusters.FindBin((Double_t)cluster->pixel(k).x, (Double_t)cluster->pixel(k).y),cluster->pixel(k).adc);
        }
+
+      //  for (int k = -1E6; k < 1E6; ++k) {
+      //    for (int i = -1000; i < 1000; ++i) {
+      // bool cycle = true;
+      // int minY = -1000, minX = -1000;
+      // double gMinY = 0.0, gMinX = 0.0, gMinZ = 0.0;
+      //
+      // int maxX = 1000, maxY = 1000;
+      // double gMaxX = 0.0, gMaxY = 0.0, gMaxZ = 0.0;
+      //
+      //  GlobalPoint minPoint, maxPoint;
+      //
+      //  std::cout<<"=================================="<<std::endl;
+      //  std::cout<<"Detector "<<detString<<std::endl;
+      //
+      // while(cycle)
+      // {
+      //      cycle = false;
+      //      LocalPoint min = topol->localPosition(MeasurementPoint(minX,minY));
+      //      minPoint =  PixelGeom->surface().toGlobal(min);
+      //
+      //       if(!(isnan(minPoint.x())) && !(isnan(minPoint.y())) && !(isnan(minPoint.z()))) {
+      //         gMinX = minPoint.x();
+      //         gMinY = minPoint.y();
+      //         gMinZ = minPoint.z();
+      //         cycle = true;
+      //       }
+      //
+      //      //std::cout<<"Pixel"<<minX<<"."<<minY<<" = "<<minPoint.x()<<" - "<<minPoint.y()<<" - "<<minPoint.z()<<std::endl;
+      //
+      //      --minX;
+      //      --minY;
+      //
+      //  }
+      //  std::cout<<"Min "<<gMinX<<" - "<<gMinY<<" - "<<gMinZ<<std::endl;
+      //
+      //  while(cycle)
+      //  {
+      //       cycle = false;
+      //       LocalPoint min = topol->localPosition(MeasurementPoint(minX,minY));
+      //       maxPoint =  PixelGeom->surface().toGlobal(min);
+      //
+      //        if(!(isnan(maxPoint.x())) && !(isnan(maxPoint.y())) && !(isnan(maxPoint.z()))) {
+      //          gMaxX = maxPoint.x();
+      //          gMaxY = maxPoint.y();
+      //          gMaxZ = maxPoint.z();
+      //          cycle = true;
+      //        }
+      //
+      //       --minX;
+      //       --minY;
+      //
+      //   }
+      //
+      //   std::cout<<"Max "<<gMaxX<<" - "<<gMaxY<<" - "<<gMaxZ<<std::endl;
+      //   std::cout<<"=================================="<<std::endl;
+
        clusterFile->cd();
        hitClusters.Write();
 
-      }
     }
 
   }

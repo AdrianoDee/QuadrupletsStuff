@@ -897,7 +897,6 @@ void MultiTrackValidator::analyze(const edm::Event& event, const edm::EventSetup
             const auto& tp = tpFound->val;
 	          nSimHits = tp[0].first->numberOfTrackerHits();
             sharedFraction = tp[0].second;
-            pdgId = tp[0].first->pdgId();
             if (tp[0].first->charge() != track->charge()) isChargeMatched = false;
             if(simRecColl.find(tp[0].first) != simRecColl.end()) numAssocRecoTracks = simRecColl[tp[0].first].size();
 	           at++;
