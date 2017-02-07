@@ -85,7 +85,7 @@ RecHitsSortedInPhi::RecHitsSortedInPhi(const std::vector<Hit>& hits, GlobalPoint
     // bufferstring +="_Lumi_";
     // bufferstring += std::to_string(runNumber);
     // bufferstring +="_Run_";
-    bufferstring += streamThreadId.str();
+    // bufferstring += streamThreadId.str();
     bufferstring += "_keys.txt";
 
     std::ofstream keyFile(bufferstring, std::ofstream::app);

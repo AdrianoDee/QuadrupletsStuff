@@ -369,7 +369,7 @@ void SiPixelRecHitsValid::analyze(const edm::Event& e, const edm::EventSetup& es
       // bufferstring +="_Lumi_";
       // bufferstring += std::to_string(runNumber);
       // bufferstring +="_Run_";
-      bufferstring += streamThreadId.str();
+      // bufferstring += streamThreadId.str();
       bufferstring += "_hits.txt";
 
       std::ofstream hitsFile(bufferstring, std::ofstream::app);

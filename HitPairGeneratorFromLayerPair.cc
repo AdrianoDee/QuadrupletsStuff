@@ -150,7 +150,7 @@ HitDoublets HitPairGeneratorFromLayerPair::doublets( const TrackingRegion& regio
     // bufferstring +="_Lumi_";
     // bufferstring += std::to_string(runNumber);
     // bufferstring +="_Run_";
-    bufferstring += streamThreadId.str();
+    // bufferstring += streamThreadId.str();
     bufferstring += "_clusters.txt";
 
     std::ofstream clustersFile;
