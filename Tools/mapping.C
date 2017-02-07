@@ -64,7 +64,7 @@ std::vector<std::string> split(const std::string &s, char delim) {
     return elems;
 }
 
-void vectorise(std::string path = "",long int noFiles = 20000000, bool test = false, long int limit = 10E10, int shrink = 8)
+void mapping(std::string path = "",long int noFiles = 20000000, bool test = false, long int limit = 10E10, int shrink = 8)
 {
 
    int hitId,hitIdKey,phiHitId,pdgId,buf;
@@ -93,7 +93,7 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
 
    files = "ls " + path + "/keys/*";
    ls = GetStdoutFromCommand(files);
-   std::cout<<ls<<std::endl;
+  //  std::cout<<ls<<std::endl;
 
    std::vector<std::string> keyNames = split(ls,'\n');
 
@@ -104,7 +104,7 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
 
    }
 
-   std::cout<<"Here"<<std::endl;
+  //  std::cout<<"Here "<<std::endl;
 
   ////////////////////////////////////////////////////////
   //Getting PdgIds List
@@ -117,11 +117,12 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
   //idMap[evt,det,hitId] = (pdg,check)
 
   for (size_t i = 0; i < pdgIdsNames.size(); i++) {
-
+    // std::cout<<"One"<<std::endl;
+    // std::cout<<pdgIdsNames[i]<<std::endl;
     hitInfos = split(pdgIdsNames[i],'_');
-
+    // std::cout<<"Two"<<std::endl;
     evInfos = split(hitInfos[0],'/');
-
+    // std::cout<<hitInfos[0]<<std::endl;
     std::pair<int,int> evDet(atoi((evInfos[2].data())),atoi((hitInfos[1].data())));
 
     ifstream pdgTxt(pdgIdsNames[i]);
@@ -162,15 +163,15 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
    //VectorPerEvents[Map[detector,hitIdInPhi]] =  pdgId
 
    std::map< int, std::map <std::pair<int,int>,std::pair<int,float>> > theMap;
-   // theMap[event] = < (det, ) ; () >
+   // theMap[event] = < (det,phiId) ; (pdgId,check) >
    if(noFiles>(long int)keyNames.size()) noFiles=(long int)keyNames.size();
-
-   for (int i = 0; i < noFiles; ++i)
-   {
-     hitInfos = split(pdgIdsNames[i],'_');
-
-   }
-
+  //  std::cout<<"Three"<<std::endl;
+  //  for (int i = 0; i < noFiles; ++i)
+  //  {
+  //    hitInfos = split(pdgIdsNames[i],'_');
+  //    std::cout<<pdgIdsNames[i]<<std::endl;
+  //  }
+  //  std::cout<<"Four"<<std::endl;
    for (int i = 0; i < noFiles; ++i)
    {
      std::cout<<"=================================================="<<std::endl;
@@ -302,26 +303,55 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
      //
     //  }
 
-    std::cout<<"Map phi sorted phi and pdgIds created "<<std::endl;
-
-    for (size_t i = 0; i < fileNames.size(); i++)
+    std::cout<<"Map phi sorted phi and pdgIds created. Writing It."<<std::endl;
+    for (std::map< int, std::map <std::pair<int,int>,std::pair<int,float>> >::iterator itMap=theMap.begin(); itMap!=theMap.end(); ++itMap)
     {
+      int event = itMap->first;
       std::cout<<"=================================================="<<std::endl;
-      std::cout<<"Reading Clusters - "<<fileNames[i]<<" no. "<<i<<std::endl;
+      std::cout<<"Writing Map For The Event Clusters - "<<event<<std::endl;//" and counter "<<itMap-theMap.begin()<<std::endl;
 
-      ifstream clusterTxt(fileNames[i]);
+      std::string clusterFilename = "./maps/" + std::to_string(event) + "_map.txt";
 
-      hitInfos = split(keyNames[i],'_');
-      evInfos = split(hitInfos[0],'/');
-
-      int event = atoi((evInfos[2].data()));
-      int detId = atoi((hitInfos[1].data()));
-      std::pair<int,int> evtDet(event,detId);
-
-      std::cout<<"Event "<<event<<" Det "<<detId<<std::endl;
-
+      std::ofstream mapFile(clusterFilename, std::ofstream::app);
+      for (std::map <std::pair<int,int>,std::pair<int,float>>::iterator itEvt=(itMap->second).begin(); itEvt!=(itMap->second).end(); ++itEvt)
+      {
+        std::cout<<"Inside"<<std::endl;
+        mapFile<<(itEvt->first).first<<"\t"<<(itEvt->first).second<<"\t"<<(itEvt->second).first<<"\t"<<(itEvt->second).second<<"\t"<<std::endl;
+      }
 
     }
+    //
+    // for (size_t i = 0; i < fileNames.size(); i++)
+    // {
+    //   std::ofstream clustersFile;
+    //   std::ofstream clustersLabel;
+    //   std::cout<<"=================================================="<<std::endl;
+    //   std::cout<<"Reading Clusters - "<<fileNames[i]<<" no. "<<i<<std::endl;
+    //
+    //   ifstream clusterTxt(fileNames[i]);
+    //
+    //   hitInfos = split(fileNames[i],'_');
+    //   evInfos = split(hitInfos[0],'/');
+    //
+    //   int event = atoi((evInfos[2].data()));
+    //   int detIdIn = atoi((hitInfos[1].data()));
+    //   int detIdOu = atoi((hitInfos[2].data()));
+    //   std::pair<int,int> evtDetIn(event,detIdIn);
+    //   std::pair<int,int> evtDetOu(event,detIdOu);
+    //
+    //   std::cout<<"Event "<<event<<" Det In : "<<detIdIn<<" Det Ou : "<<detIdOu<<std::endl;
+    //
+    //   std::string clusterFilename = "./datasets/" + std::to_string(event) + "_" + std::to_string(detIdIn) + "_" + std::to_string(detIdOu) + "_clusters.txt";
+    //   std::string clusterLabelname = "./datasets/" + std::to_string(event) + "_" + std::to_string(detIdIn) + "_" + std::to_string(detIdOu) + "_clusterslables.txt";
+    //
+    //   clustersFile.open(clusterFilename, std::ofstream::app);
+    //   clustersLabel.open(clusterLabelname, std::ofstream::app);
+    //
+    //   clustersFile << i <<std::endl;
+    //   clustersLabel << i <<std::endl;
+    //
+    //
+    // }
 
 
    }
