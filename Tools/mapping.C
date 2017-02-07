@@ -259,7 +259,7 @@ void mapping(std::string path = "",long int noFiles = 20000000, bool test = fals
               //Compare checks (cheks are x position of the hit)
               if((it3->second).second == (it2->second).second)
               {
-                // std::cout<<detId << " " << event << " " << it2->first << " " << (it3->second).first<<std::endl;
+                std::cout<<detId << " " << event << " " << it2->first << " " <<(it2->second).first<<" "<<(it3->second).first<<std::endl;
 
                 std::pair<int,int> keyDetHit(detId,(it2->second).first);
                 std::pair<int,float> idCheck((it3->second).first,(it3->second).second);
@@ -307,13 +307,14 @@ void mapping(std::string path = "",long int noFiles = 20000000, bool test = fals
     for (std::map< int, std::map <std::pair<int,int>,std::pair<int,float>> >::iterator itMap=theMap.begin(); itMap!=theMap.end(); ++itMap)
     {
       int event = itMap->first;
+      std::map <std::pair<int,int>,std::pair<int,float>> mapEvt = itMap->second;
       std::cout<<"=================================================="<<std::endl;
       std::cout<<"Writing Map For The Event Clusters - "<<event<<std::endl;//" and counter "<<itMap-theMap.begin()<<std::endl;
 
       std::string clusterFilename = "./maps/" + std::to_string(event) + "_map.txt";
 
       std::ofstream mapFile(clusterFilename, std::ofstream::app);
-      for (std::map <std::pair<int,int>,std::pair<int,float>>::iterator itEvt=(itMap->second).begin(); itEvt!=(itMap->second).end(); ++itEvt)
+      for (std::map <std::pair<int,int>,std::pair<int,float>>::iterator itEvt=mapEvt.begin(); itEvt!=mapEvt.end(); ++itEvt)
       {
         std::cout<<"Inside"<<std::endl;
         mapFile<<(itEvt->first).first<<"\t"<<(itEvt->first).second<<"\t"<<(itEvt->second).first<<"\t"<<(itEvt->second).second<<"\t"<<std::endl;
