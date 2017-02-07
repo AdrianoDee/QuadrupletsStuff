@@ -58,7 +58,9 @@ void split(const std::string &s, char delim, std::vector<std::string> &elems) {
 
 std::vector<std::string> split(const std::string &s, char delim) {
     std::vector<std::string> elems;
+    elems.reserve(20000);
     split(s, delim, elems);
+    elems.shrink_to_fit();
     return elems;
 }
 
@@ -71,39 +73,43 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
     ////////////////////////////////////////////////////////
     //Getting File List
 
-   std::string files = "ls " + path + "/clusters/" + "*";
+   std::string files = "ls " + path + "/clusters/*";
    std::string ls = GetStdoutFromCommand(files);
    std::vector<std::string> fileNames = split(ls,'\n');
    std::vector<std::string> hitInfos;
    std::vector<std::string> evInfos;
 
-  //  for (size_t i = 0; i < fileNames.size(); i++) {
-   //
-   //
-  //    hitInfos = split(fileNames[i],'_');
-  //   //  std::cout<<"Evt : "<< atoi((hitInfos[0].data())) <<" Det : "<< atoi((hitInfos[1].data())) <<"Filename : "<<fileNames[i]<<std::endl;
-   //
-  //  }
+   for (size_t i = 0; i < fileNames.size(); i++) {
+
+
+     hitInfos = split(fileNames[i],'_');
+    //  std::cout<<"Evt : "<< atoi((hitInfos[0].data())) <<" Det : "<< atoi((hitInfos[1].data())) <<"Filename : "<<fileNames[i]<<std::endl;
+
+   }
+
 
    ////////////////////////////////////////////////////////
    //Getting Key List
 
-   files = "ls " + path + "/keys/" + "*";
+   files = "ls " + path + "/keys/*";
    ls = GetStdoutFromCommand(files);
+   std::cout<<ls<<std::endl;
 
    std::vector<std::string> keyNames = split(ls,'\n');
 
-  //  for (size_t i = 0; i < keyNames.size(); i++) {
-   //
-  //    hitInfos = split(keyNames[i],'_');
-  //   //  std::cout<<"Evt : "<< atoi((hitInfos[0].data())) <<" Det : "<< atoi((hitInfos[1].data())) <<"Filename : "<<keyNames[i]<<std::endl;
-   //
-  //  }
+   for (size_t i = 0; i < keyNames.size(); i++) {
+
+     hitInfos = split(keyNames[i],'_');
+    //  std::cout<<"Evt : "<< atoi((hitInfos[0].data())) <<" Det : "<< atoi((hitInfos[1].data())) <<"Filename : "<<keyNames[i]<<std::endl;
+
+   }
+
+   std::cout<<"Here"<<std::endl;
 
   ////////////////////////////////////////////////////////
   //Getting PdgIds List
 
-  files = "ls " + path + "/pdgIds/"+ "*";
+  files = "ls " + path + "/pdgIds/*";
   ls = GetStdoutFromCommand(files);
   std::vector<std::string> pdgIdsNames = split(ls,'\n');
   std::map< std::pair<int,int> , std::map <int,std::pair <int,float > > > pdgMap;
@@ -157,15 +163,15 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
 
    std::map< int, std::map <std::pair<int,int>,std::pair<int,float>> > theMap;
    // theMap[event] = < (det, ) ; () >
-   if(noFiles>keyNames.size()) noFiles=(long int)keyNames.size();
+   if(noFiles>(long int)keyNames.size()) noFiles=(long int)keyNames.size();
 
-   for (size_t i = 0; i < noFiles; ++i)
+   for (int i = 0; i < noFiles; ++i)
    {
      hitInfos = split(pdgIdsNames[i],'_');
 
    }
 
-   for (size_t i = 0; i < noFiles; ++i)
+   for (int i = 0; i < noFiles; ++i)
    {
      std::cout<<"=================================================="<<std::endl;
      std::cout<<"Reading Keys - "<<keyNames[i]<<" no. "<<i<<std::endl;
@@ -300,7 +306,7 @@ void vectorise(std::string path = "",long int noFiles = 20000000, bool test = fa
 
     for (size_t i = 0; i < fileNames.size(); i++)
     {
-      td::cout<<"=================================================="<<std::endl;
+      std::cout<<"=================================================="<<std::endl;
       std::cout<<"Reading Clusters - "<<fileNames[i]<<" no. "<<i<<std::endl;
 
       ifstream clusterTxt(fileNames[i]);
